@@ -1,0 +1,18 @@
+--- web.xml
++++ web.https.xml
+@@ -4759,5 +4759,15 @@
+         <welcome-file>index.htm</welcome-file>
+         <welcome-file>index.jsp</welcome-file>
+     </welcome-file-list>
++
++    <security-constraint>
++        <web-resource-collection>
++                <web-resource-name>Entire Application</web-resource-name>
++                <url-pattern>/*</url-pattern>
++        </web-resource-collection>
++        <user-data-constraint>
++                <transport-guarantee>CONFIDENTIAL</transport-guarantee>
++        </user-data-constraint>
++    </security-constraint>
+ 
+ </web-app>

@@ -1,0 +1,137 @@
+#  SAML SSO settings, read by utils.SamlSso (pac4j-saml). The key names are
+#  kept from the java-saml toolkit Security Shepherd used before, so existing
+#  files keep working. Copy to onelogin.saml.properties and enable SSO with
+#  sso.enabled=true in sso.properties.
+#
+#  Not supported with pac4j, and ignored:
+#    onelogin.saml2.strict = false     (messages are always validated strictly)
+#    onelogin.saml2.debug
+#    onelogin.saml2.security.nameid_encrypted, logoutresponse_signed,
+#    want_assertions_encrypted, want_nameid_encrypted, want_xml_validation
+#      (encrypted assertions and NameIDs are still decrypted when received)
+#  onelogin.saml2.idp.certfingerprint alone is not supported: set
+#  onelogin.saml2.idp.x509cert to the IdP's full signing certificate.
+#
+#  Only SP-initiated login is supported (users start at /saml/dologin).
+#  IdP-initiated (unsolicited) responses are refused: they can't be tied to the
+#  browser that is logging in, which would allow login CSRF. Each login is bound
+#  to the browser by a cookie of its own, shepherd_saml_request_<hash> (HttpOnly,
+#  Secure, SameSite=None, path of the ACS URL's directory, e.g. /saml/), deleted
+#  once the login completes, so the ACS must be served over HTTPS. Logins started
+#  in several tabs at once all work.
+#  The assertion's bearer SubjectConfirmationData must carry the AuthnRequest's
+#  ID in InResponseTo, as the SAML profile requires (standard IdPs do this), so
+#  the binding holds even when the Response itself is unsigned.
+
+onelogin.saml2.strict =  true
+
+#  Service Provider Data that we are deploying
+#
+
+#  Identifier of the SP entity  (must be a URI)
+onelogin.saml2.sp.entityid = https://localhost/saml/metadata.xml
+
+# Specifies info about where and how the <AuthnResponse> message MUST be
+#  returned to the requester, in this case our SP.
+# URL Location where the <Response> from the IdP will be returned
+onelogin.saml2.sp.assertion_consumer_service.url = https://localhost/saml/acs
+
+# SAML protocol binding to be used when returning the <Response>
+# message. HTTP-POST binding only: any other value stops SSO from starting.
+onelogin.saml2.sp.assertion_consumer_service.binding = urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
+
+# Specifies info about where and how the <Logout Response> message MUST be
+# returned to the requester, in this case our SP. Leave empty to disable
+# IdP-initiated single logout: no logout endpoint is then advertised.
+onelogin.saml2.sp.single_logout_service.url = https://localhost/saml/sls
+
+# SAML protocol binding to be used when returning the <LogoutResponse> or sending the <LogoutRequest>
+# message.  Onelogin Toolkit supports for this endpoint the
+# HTTP-Redirect binding only
+onelogin.saml2.sp.single_logout_service.binding = urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+
+# Specifies constraints on the name identifier to be used to
+# represent the requested subject.
+# Take a look on lib/Saml2/Constants.php to see the NameIdFormat supported
+onelogin.saml2.sp.nameidformat = urn:oasis:names:tc:SAML:2.0:nameid-format:persistent
+
+# The SP's certificate and private key. Both may be left empty if the SP signs
+# nothing (authnrequest_signed, logoutrequest_signed and sign_metadata all false):
+# a temporary in-memory key is then used, and encrypted assertions can't be used.
+
+onelogin.saml2.sp.x509cert = 
+
+# RSA private key, PKCS#8 (BEGIN PRIVATE KEY) or PKCS#1 (BEGIN RSA PRIVATE KEY).
+# The PEM header/footer and line breaks are optional.
+onelogin.saml2.sp.privatekey = 
+
+# Identity Provider Data that we want connect with our SP
+#
+
+# Identifier of the IdP entity  (must be a URI)
+onelogin.saml2.idp.entityid = 
+
+# SSO endpoint info of the IdP. (Authentication Request protocol)
+# URL Target of the IdP where the SP will send the Authentication Request Message
+onelogin.saml2.idp.single_sign_on_service.url = 
+
+# SAML protocol binding to be used when returning the <Response>
+# message.  Onelogin Toolkit supports for this endpoint the
+# HTTP-Redirect binding only
+onelogin.saml2.idp.single_sign_on_service.binding = urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+
+# SLO endpoint info of the IdP.
+# URL Location of the IdP where the SP will send the SLO Request
+onelogin.saml2.idp.single_logout_service.url = 
+
+# Optional SLO Response endpoint info of the IdP.
+# URL Location of the IdP where the SP will send the SLO Response. If left blank, same URL as onelogin.saml2.idp.single_logout_service.url will be used.
+# Some IdPs use a separate URL for sending a logout request and response, use this property to set the separate response url
+onelogin.saml2.idp.single_logout_service.response.url = 
+
+# SAML protocol binding to be used when returning the <Response>
+# message.  Onelogin Toolkit supports for this endpoint the
+# HTTP-Redirect binding only
+onelogin.saml2.idp.single_logout_service.binding = urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+
+# Public x509 certificate of the IdP (required)
+onelogin.saml2.idp.x509cert = 
+
+
+# Security settings
+#
+
+# Indicates whether the <samlp:AuthnRequest> messages sent by this SP
+# will be signed.              [The Metadata of the SP will offer this info]
+onelogin.saml2.security.authnrequest_signed = true
+
+# Indicates whether the <samlp:logoutRequest> messages sent by this SP
+# will be signed.
+onelogin.saml2.security.logoutrequest_signed = true
+
+# Indicates a requirement for the <samlp:Response>, <samlp:LogoutRequest> and
+# <samlp:LogoutResponse> elements received by this SP to be signed.
+onelogin.saml2.security.want_messages_signed = true
+
+# Indicates a requirement for the <saml:Assertion> elements received by this SP to be signed.
+onelogin.saml2.security.want_assertions_signed = true
+
+# Indicates a requirement for the Metadata of this SP to be signed.
+# Right now supported null (in order to not sign) or true (sign using SP private key) 
+onelogin.saml2.security.sign_metadata = true
+
+# Authentication context.
+# Set Empty and no AuthContext will be sent in the AuthNRequest
+# You can set multiple values (comma separated them)
+onelogin.saml2.security.requested_authncontext = 
+
+# Allows the authn comparison parameter to be set, defaults to 'exact'
+onelogin.saml2.security.requested_authncontextcomparison = exact
+
+# Algorithm that the toolkit will use on signing process. Options:
+#  'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
+#  'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
+#  'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+#  'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
+#  'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
+onelogin.saml2.security.signature_algorithm = http://www.w3.org/2001/04/xmldsig-more#rsa-sha256
